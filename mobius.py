@@ -81,13 +81,16 @@ class Mobius:
         fixed_z = self.get_fixed_points()
         fixed_coords = inverse_stereographic(fixed_z)
 
-        sphere = pv.Icosphere(radius=1.0,nsub=3)
+        sphere = pv.Icosphere(radius=1.0,nsub=4)
         z_points = stereographic(*sphere.points.T)
         w_points = self.apply_mobius(z_points)
 
         transformed_coords = inverse_stereographic(w_points)
         vectors = transformed_coords - sphere.points
 
+        if not vectors_scaled:
+            vectors=1/la.norm(vectors,axis=1).reshape(-1,1)*vectors
+        
         if not self.is_identity() and len(fixed_coords) > 0:
             distances = np.linalg.norm(sphere.points[:, None, :] - fixed_coords[None, :, :], axis=2)
             min_distance = np.min(distances, axis=1)
@@ -97,7 +100,7 @@ class Mobius:
         sphere["vectors"] = vectors
 
         plotter = pv.Plotter()
-        arrows = sphere.glyph(orient="vectors", scale=vectors_scaled, factor=0.1)
+        arrows = sphere.glyph(orient="vectors", factor=0.03)
         plotter.add_mesh(arrows, color="grey")
         plotter.add_title("Möbius Transformation on S2")
 
